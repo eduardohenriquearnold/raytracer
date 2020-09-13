@@ -2,6 +2,7 @@
 #include <fstream>
 #include "ray.h"
 #include "hitable.h"
+#include "camera.h"
 
 vec3 color(const ray& r, hitable *world){
   hit_record rec;
@@ -21,13 +22,11 @@ int main()
   std::ofstream f;
   f.open("output.ppm", std::ios::out);
 
-  //define rendering limits
-  int nx = 200;
-  int ny = 100;
-  vec3 lower_left_corner(-2.,-1.,-1.);
-  vec3 origin(0.,0.,0.);
-  vec3 vertical(0.,2.,0.);
-  vec3 horizontal(4.,0.,0.);
+  //define rendering limits/properties
+  int nx = 600;
+  int ny = 300;
+  int ns = 100;
+  camera cam;
 
   //define world
   hitable *list[2];
@@ -40,10 +39,15 @@ int main()
   for (int j=ny-1; j>=0; j--)
     for (int i=0; i<nx; i++)
     {
-      float u = float(j)/ny;
-      float v = float(i)/nx;
-      ray r(origin, lower_left_corner + u*vertical + v*horizontal);
-      vec3 col = color(r, world);
+      vec3 col(0,0,0);
+      for (int s=0; s<ns; s++)
+      {
+        float u = float(i + drand48())/nx;
+        float v = float(j + drand48())/ny;
+        ray r = cam.get_ray(u,v);
+        col += color(r, world);
+      }
+      col /= float(ns);
       col *= 255.99;
       f << int(col.e[0]) << " " << int(col.e[1]) << " " << int(col.e[2]) << "\n";
     }
