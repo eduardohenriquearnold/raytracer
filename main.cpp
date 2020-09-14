@@ -23,8 +23,8 @@ int main()
   f.open("output.ppm", std::ios::out);
 
   //define rendering limits/properties
-  int nx = 600;
-  int ny = 300;
+  int nx = 200;
+  int ny = 100;
   int ns = 100;
   camera cam;
 
@@ -37,6 +37,8 @@ int main()
   std::cout << "Started rendering..." << std::endl;
   f << "P3\n" << nx << " " << ny << "\n255\n";
   for (int j=ny-1; j>=0; j--)
+  {
+    std::cout << "\rScanlines remaining: " << j << ' ' << std::flush;
     for (int i=0; i<nx; i++)
     {
       vec3 col(0,0,0);
@@ -51,6 +53,7 @@ int main()
       col *= 255.99;
       f << int(col.e[0]) << " " << int(col.e[1]) << " " << int(col.e[2]) << "\n";
     }
+  }
   
   f.close();
   std::cout << "Rendering done!" << std::endl;
