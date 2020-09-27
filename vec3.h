@@ -132,3 +132,12 @@ inline vec3& vec3::operator/=(const float t){
 inline vec3 unit_vector(vec3 v){
   return v/v.length();
 }
+
+vec3 random_in_unit_sphere(){
+  vec3 p;
+  do
+    p = 2*vec3(drand48(),drand48(),drand48()) - vec3(1,1,1);
+  while (p.squared_length() >= 1);
+  return p;
+}
+

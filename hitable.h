@@ -1,10 +1,13 @@
 #pragma once
 #include "ray.h"
 
+class material;
+
 struct hit_record {
   float t;
   vec3 p;
   vec3 normal;
+  material *mat_ptr;
 };
 
 class hitable{
@@ -39,11 +42,12 @@ bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_record& rec) 
 class sphere: public hitable{
   public:
     sphere(){}
-    sphere(vec3 cen, float r) : center(cen), radius(r){};
+    sphere(vec3 cen, float r, material* mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
     virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const;
 
     vec3 center;
     float radius;
+    material* mat;
 };
 
 bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const {
@@ -58,6 +62,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
       rec.t = temp;
       rec.p = r.point_at_parameter(rec.t);
       rec.normal = (rec.p-center)/radius;
+      rec.mat_ptr = mat;
       return true;
     }
     temp = (-b+sqrt(discriminant))/a;
@@ -65,6 +70,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
       rec.t = temp;
       rec.p = r.point_at_parameter(rec.t);
       rec.normal = (rec.p-center)/radius;
+      rec.mat_ptr = mat;
       return true;
     }
   }
