@@ -35,7 +35,8 @@ int main()
   int nx = 200;
   int ny = 100;
   int ns = 100;
-  camera cam;
+  // camera cam(vec3(-2,2,1), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/float(ny));
+  camera cam(vec3(0,0,0), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/ny);
 
   //define worldA
   hitable *listA[2];
