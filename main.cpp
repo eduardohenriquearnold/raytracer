@@ -15,7 +15,7 @@ vec3 color(const ray& r, hitable *world, int depth){
   if (world->hit(r, 0.0001, MAXFLOAT, rec)){
     ray scattered;
     vec3 attenuation;
-    if rec.mat_ptr->scatter(r, rec, attenuation, scattered)
+    if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
       return attenuation*color(scattered, world, depth+1);
     return vec3(0,0,0);
   }
@@ -48,7 +48,7 @@ int main()
   listB[0] = new sphere(vec3(0,0,-1),0.5, new lambertian(vec3(0.8,0.3,0.3)));
   listB[1] = new sphere(vec3(0,-100.5,-1),100, new lambertian(vec3(0.8,0.8,0)));
   listB[2] = new sphere(vec3(1,0,-1),0.5, new metal(vec3(0.8,0.6,0.2)));
-  listB[3] = new sphere(vec3(-1,0,-1),0.5, new metal(vec3(0.8,0.8,0.8)));
+  listB[3] = new sphere(vec3(-1,0,-1),0.5, new dielectric(1.5));
   hitable *worldB = new hitable_list(listB,4);
 
   std::cout << "Started rendering..." << std::endl;
