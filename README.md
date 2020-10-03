@@ -24,6 +24,11 @@ Amazed with the results that such a simple implementation from scratch can get!
 
 ### Improvements
 - [X] Conversion to PNG using ImageMagick
-- [ ] OpenMP parallel for (if we have multiple cores, why not use them?)
+- [X] OpenMP parallel for (if we have multiple cores, why not use them?)
 - [ ] CUDA version (let's see how fast this can render!)
+
+### Runtime performance
+Rendering a 600x400 image with 100 ray samples per pixel on a Xeon E5-1630 3.7Ghz.
+- Without OpenMP, using a single core, the process took 24min.
+- Using OpenMP with all 8 available cores the same process took 6min 18s. Almost four times as fast!
 

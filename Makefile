@@ -1,5 +1,5 @@
 CXX = g++
-CXX_FLAGS = 
+CXX_FLAGS = -fopenmp
 
 main: 
 	$(CXX) main.cpp -o rt $(CXX_FLAGS)
