@@ -1,5 +1,11 @@
 #pragma once
+#include <vector>
+#include <memory>
+
 #include "ray.h"
+
+using std::shared_ptr;
+using std::make_shared;
 
 class material;
 
@@ -7,7 +13,7 @@ struct hit_record {
   float t;
   vec3 p;
   vec3 normal;
-  material *mat_ptr;
+  shared_ptr<material> mat_ptr;
 };
 
 class hitable{
@@ -18,19 +24,21 @@ class hitable{
 class hitable_list : public hitable {
   public:
     hitable_list() {}
-    hitable_list(hitable **l, int n){list=l; list_size=n;}
+    hitable_list(shared_ptr<hitable> object){ add(object); }
+
+    void add(shared_ptr<hitable> object) { objects.push_back(object); }
+    void clear() { objects.clear(); }
     virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const;
 
-    hitable **list;
-    int list_size;
+    std::vector<shared_ptr<hitable> > objects;
 };
 
 bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_record& rec) const{
   hit_record temp_rec;
   bool hit_anything = false;
   double closest_so_far = t_max;
-  for (int i=0; i<list_size; i++)
-    if (list[i]->hit(r, t_min, closest_so_far, temp_rec))
+  for (const auto& object: objects)
+    if (object->hit(r, t_min, closest_so_far, temp_rec))
     {
       hit_anything = true;
       closest_so_far = temp_rec.t;
@@ -42,12 +50,12 @@ bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_record& rec) 
 class sphere: public hitable{
   public:
     sphere(){}
-    sphere(vec3 cen, float r, material* mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
-    virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const;
+    sphere(vec3 cen, float r, shared_ptr<material> mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
+    virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const override;
 
     vec3 center;
     float radius;
-    material* mat;
+    shared_ptr<material> mat;
 };
 
 bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const {
@@ -60,7 +68,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
     float temp = (-b-sqrt(discriminant))/a;
     if (temp < t_max && temp > t_min){
       rec.t = temp;
-      rec.p = r.point_at_parameter(rec.t);
+      rec.p = r.at(rec.t);
       rec.normal = (rec.p-center)/radius;
       rec.mat_ptr = mat;
       return true;
@@ -68,7 +76,7 @@ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const 
     temp = (-b+sqrt(discriminant))/a;
     if (temp < t_max && temp > t_min){
       rec.t = temp;
-      rec.p = r.point_at_parameter(rec.t);
+      rec.p = r.at(rec.t);
       rec.normal = (rec.p-center)/radius;
       rec.mat_ptr = mat;
       return true;

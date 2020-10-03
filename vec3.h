@@ -1,34 +1,36 @@
 #pragma once
-#include <math.h>
-#include <stdlib.h>
 #include <iostream>
+#include <random>
+#include <cmath>
+
+using std::sqrt;
 
 class vec3 {
   public:
-  vec3() {}
-  vec3(float e0, float e1, float e2){e[0]=e0; e[1]=e1; e[2]=e2;}
-  inline float x() const {return e[0]; }
-  inline float y() const {return e[1]; }
-  inline float z() const {return e[2]; }
-  inline float r() const {return e[0]; }
-  inline float g() const {return e[1]; }
-  inline float b() const {return e[2]; }
+  vec3(): e{0,0,0} {}
+  vec3(float e0, float e1, float e2) : e{e0,e1,e2} {}
+  float x() const {return e[0]; }
+  float y() const {return e[1]; }
+  float z() const {return e[2]; }
+  float r() const {return e[0]; }
+  float g() const {return e[1]; }
+  float b() const {return e[2]; }
 
-  inline const vec3& operator+() const {return *this; }
-  inline vec3 operator-() const {return vec3(-e[0],-e[1],-e[2]); }
-  inline float operator[](int i) const {return e[i]; }
-  inline float& operator[](int i) {return e[i]; }
+  const vec3& operator+() const {return *this; }
+  vec3 operator-() const {return vec3(-e[0],-e[1],-e[2]); }
+  float operator[](int i) const {return e[i]; }
+  float& operator[](int i) {return e[i]; }
 
-  inline vec3& operator+=(const vec3 &v2);
-  inline vec3& operator-=(const vec3 &v2);
-  inline vec3& operator*=(const vec3 &v2);
-  inline vec3& operator/=(const vec3 &v2);
-  inline vec3& operator*=(const float t);
-  inline vec3& operator/=(const float t);
+  vec3& operator+=(const vec3 &v2);
+  vec3& operator-=(const vec3 &v2);
+  vec3& operator*=(const vec3 &v2);
+  vec3& operator/=(const vec3 &v2);
+  vec3& operator*=(const float t);
+  vec3& operator/=(const float t);
 
-  inline float length() const { return sqrt(e[0]*e[0]+e[1]*e[1]+e[2]*e[2]); }
-  inline float squared_length() const { return e[0]*e[0]+e[1]*e[1]+e[2]*e[2]; }
-  inline void make_unit_vector();
+  float length() const { return sqrt(squared_length()); }
+  float squared_length() const { return e[0]*e[0]+e[1]*e[1]+e[2]*e[2]; }
+  void make_unit_vector();
 
   float e[3];
 };
@@ -44,7 +46,7 @@ inline std::ostream& operator<<(std::ostream &os, vec3 &t){
 }
 
 inline void vec3::make_unit_vector(){
-  float k = 1.0/sqrt(e[0]*e[0]+e[1]*e[1]+e[2]*e[2]);
+  float k = 1.0/length();
   e[0] *= k; e[1]*= k; e[2]*= k;
 }
 
@@ -133,11 +135,27 @@ inline vec3 unit_vector(vec3 v){
   return v/v.length();
 }
 
+inline float random_float(float min=0, float max=1){
+    static std::uniform_real_distribution<float> distribution(min, max);
+    static std::mt19937 generator;
+    return distribution(generator);
+}
+
+inline float clamp(float x, float min, float max){
+  if (x<min) return min;
+  if (x>max) return max;
+  return x;
+}
+
+inline vec3 random_vec3(float min=0, float max=1){
+    return vec3(random_float(min,max),random_float(min,max),random_float(min,max));
+}
+
 vec3 random_in_unit_sphere(){
-  vec3 p;
-  do
-    p = 2*vec3(drand48(),drand48(),drand48()) - vec3(1,1,1);
-  while (p.squared_length() >= 1);
-  return p;
+  while(true){
+    auto p = random_vec3(-1,1);
+    if (p.squared_length() >= 1) continue;
+    return p;
+  }
 }
 
