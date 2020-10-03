@@ -5,6 +5,40 @@
 #include "camera.h"
 #include "material.h"
 
+hitable* randomScene(){
+  int n = 500;
+  hitable **list = new hitable*[n+1];
+  int i=1;
+  for (int a=-11; a<11; a++)
+    for (int b=-11; b<11; b++) {
+      float choose_mat = drand48();
+      vec3 center(a+0.9*drand48(), 0.2, b+0.9*drand48());
+
+      if ((center-vec3(4,0.2,0)).length() < 0.9)
+        continue;
+
+      material* mat;
+      vec3 albedo = random_in_unit_sphere();
+      albedo = albedo*albedo;
+      if (choose_mat < 0.8)
+        mat = new lambertian(albedo);
+      else if (choose_mat < 0.95)
+        mat = new metal(0.5*albedo);
+      else
+        mat = new dielectric(1.5);
+
+      list[i++] = new sphere(center, 0.2, mat);
+    }
+
+  
+  list[0] = new sphere(vec3(0,-1000,0), 1000, new lambertian(vec3(0.5,0.5,0.5))); //world sphere
+  list[i++] = new sphere(vec3(0,1,0), 1, new dielectric(1.5)); //big glass sphere
+  list[i++] = new sphere(vec3(-4,1,0), 1, new lambertian(vec3(0.4,0.2,0.1)));
+  list[i++] = new sphere(vec3(4,1,0), 1, new metal(vec3(0.7,0.6,0.5)));
+
+  return new hitable_list(list, i);
+}
+
 vec3 color(const ray& r, hitable *world, int depth){
   hit_record rec;
   
@@ -32,11 +66,11 @@ int main()
   f.open("output.ppm", std::ios::out);
 
   //define rendering limits/properties
-  int nx = 200;
-  int ny = 100;
-  int ns = 100;
-  // camera cam(vec3(-2,2,1), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/float(ny));
-  camera cam(vec3(0,0,0), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/ny);
+  int nx = 600;
+  int ny = 400;
+  int ns = 10;
+  camera cam(vec3(13,2,3), vec3(0,0,0), vec3(0,1,0), 90, float(nx)/float(ny));
+  // camera cam(vec3(0,0,0), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/ny);
 
   //define worldA
   hitable *listA[2];
@@ -52,6 +86,11 @@ int main()
   listB[3] = new sphere(vec3(-1,0,-1),0.5, new dielectric(1.5));
   hitable *worldB = new hitable_list(listB,4);
 
+  //random scene
+  hitable *worldC = randomScene();
+
+  //render world
+  hitable* world = worldC;
   std::cout << "Started rendering..." << std::endl;
   f << "P3\n" << nx << " " << ny << "\n255\n";
   for (int j=ny-1; j>=0; j--)
@@ -65,7 +104,7 @@ int main()
         float u = float(i + drand48())/nx;
         float v = float(j + drand48())/ny;
         ray r = cam.get_ray(u,v);
-        col += color(r, worldB, 0);
+        col += color(r, world, 0);
       }
       col /= float(ns);
       col[0] = sqrt(col[0]);
