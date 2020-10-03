@@ -12,28 +12,18 @@ Amazed with the results that such a simple implementation from scratch can get!
 - ImageMagick (convert PPM to png)
 
 ### Usage
-Compile using
- ```
-make
-```
+- Compile using `make`
+- Render using  `make render`. The rendered image will be generated at `./output.png`
+- Clean with  `make clean`
 
-Render using 
-```
-make render
-```
-
-Clean with 
-```
-make clean
-```
 
 ### Results
-![normals](outputNormal.png)
+![normals](outputNormals.png)
 ![sceneA](outputSceneA.png)
 ![rendomScene](outputRandomScene.png)
 
 ### Improvements
-[X] Conversion to PNG using ImageMagick
-[ ] OpenMP parallel for (if we have multiple cores, why not use them?)
-[ ] CUDA version (let's see how fast this can render!)
+- [X] Conversion to PNG using ImageMagick
+- [ ] OpenMP parallel for (if we have multiple cores, why not use them?)
+- [ ] CUDA version (let's see how fast this can render!)
 
