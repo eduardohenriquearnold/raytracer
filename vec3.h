@@ -159,3 +159,5 @@ vec3 random_in_unit_sphere(){
   }
 }
 
+//Declare OpenMP reduction for sum of vec3 types
+#pragma omp declare reduction(+ : vec3 : omp_out+=omp_in) initializer(omp_priv(0,0,0))

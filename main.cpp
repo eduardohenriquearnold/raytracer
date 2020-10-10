@@ -100,7 +100,7 @@ int main()
     for (int i=0; i<nx; i++)
     {
       vec3 col(0,0,0);
-			#pragma omp parallel for
+      #pragma omp parallel for reduction(+:col)
       for (int s=0; s<ns; s++)
       {
         float u = (i + random_float())/nx;
