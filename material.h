@@ -5,13 +5,13 @@
 
 class material {
   public: 
-    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const = 0;
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const = 0;
 };
 
 class lambertian: public material{
   public:
-    lambertian(const vec3& a) : albedo(a) {}
-    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
+    __device__ lambertian(const vec3& a) : albedo(a) {}
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
       vec3 target = rec.p + rec.normal + random_in_unit_sphere();
       scattered = ray(rec.p, target-rec.p);
       attenuation = albedo;
@@ -23,13 +23,13 @@ class lambertian: public material{
 
 class metal: public material{
   public:
-    metal(const vec3& a) : albedo(a) {}
+    __device__ metal(const vec3& a) : albedo(a) {}
 
-    vec3 reflect(const vec3& v, const vec3& n) const {
+    __device__ vec3 reflect(const vec3& v, const vec3& n) const {
       return v-2*dot(v,n)*n;
     }
 
-    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
       vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
       scattered = ray(rec.p, reflected);
       attenuation = albedo;
@@ -41,13 +41,13 @@ class metal: public material{
 
 class dielectric : public material{
   public:
-    dielectric(float ri) : ref_idx(ri){}
+    __device__ dielectric(float ri) : ref_idx(ri){}
 
-    vec3 reflect(const vec3& v, const vec3& n) const {
+    __device__ vec3 reflect(const vec3& v, const vec3& n) const {
       return v-2*dot(v,n)*n;
     }
 
-    bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted) const {
+    __device__ bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted) const {
       vec3 uv = unit_vector(v);
       float dt = dot(uv, n);
       float discriminant = 1 - ni_over_nt*ni_over_nt*(1-dt*dt);
@@ -59,13 +59,13 @@ class dielectric : public material{
         return false;
     }
 
-    float schlick(float cosine) const{
+    __device__ float schlick(float cosine) const{
       float r0 = (1-ref_idx)/(1+ref_idx);
       r0 = r0*r0;
       return r0 + (1-r0)*pow(1-cosine, 5);
     }
 
-    virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
       vec3 outward_normal;
       vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
       float ni_over_nt;
