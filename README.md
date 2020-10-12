@@ -29,7 +29,7 @@ Amazed with the results that such a simple implementation from scratch can get!
 - [X] CUDA version (let's see how fast this can render!)
 
 ### CUDA Details
-Implemented a CUDA version of the Ray Tracer losely following the NVIDIA's [Ray Tracing Accelerated blog post](https://developer.nvidia.com/blog/accelerated-ray-tracing-cuda/).
+Implemented a CUDA version of the Ray Tracer loosely following the NVIDIA's [Ray Tracing Accelerated blog post](https://developer.nvidia.com/blog/accelerated-ray-tracing-cuda/).
 I was annoyed at having to use the double pointers `camera** cam; hitable** world` to instantiate objects on the device. Who uses double pointers in 2020 anyway?
 First I tried the elegant [Managed class operator overloading](https://developer.nvidia.com/blog/unified-memory-in-cuda-6/) solution from NVIDIA's blog post on Unified Memory.
 This solution works fine for the `camera` class, but fails for `hitable` and `material` since both these classes use virtual functions. 
@@ -42,7 +42,7 @@ Rendering a 600x400 image with 100 ray samples per pixel on a Xeon E5-1630 3.7Gh
 | Device      | Time     |
 |-------------|----------|
 |CPU (1 core) | 24m      |
-|CPU (2 cores)| 6m18s    |
+|CPU (8 cores)| 6m18s    |
 |GPU          | 1m3s     |
 
 - Without OpenMP, using a single core, the process took 24min.
