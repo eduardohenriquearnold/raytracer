@@ -2,17 +2,18 @@
 #include "vec3.h"
 #include "ray.h"
 #include "hitable.h"
+#include "managed.h"
 
-class material {
+class material : public Managed {
   public: 
-    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const = 0;
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* s) const = 0;
 };
 
 class lambertian: public material{
   public:
-    __device__ lambertian(const vec3& a) : albedo(a) {}
-    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
-      vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+    __host__ __device__ lambertian(const vec3& a) : albedo(a) {}
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* s) const {      
+      vec3 target = rec.p + rec.normal + random_in_unit_sphere(s);
       scattered = ray(rec.p, target-rec.p);
       attenuation = albedo;
       return true;
@@ -23,13 +24,13 @@ class lambertian: public material{
 
 class metal: public material{
   public:
-    __device__ metal(const vec3& a) : albedo(a) {}
+    __host__ __device__ metal(const vec3& a) : albedo(a) {}
 
     __device__ vec3 reflect(const vec3& v, const vec3& n) const {
       return v-2*dot(v,n)*n;
     }
 
-    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* s) const {      
       vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
       scattered = ray(rec.p, reflected);
       attenuation = albedo;
@@ -41,7 +42,7 @@ class metal: public material{
 
 class dielectric : public material{
   public:
-    __device__ dielectric(float ri) : ref_idx(ri){}
+    __host__ __device__ dielectric(float ri) : ref_idx(ri){}
 
     __device__ vec3 reflect(const vec3& v, const vec3& n) const {
       return v-2*dot(v,n)*n;
@@ -65,7 +66,7 @@ class dielectric : public material{
       return r0 + (1-r0)*pow(1-cosine, 5);
     }
 
-    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {      
+    __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* s) const {      
       vec3 outward_normal;
       vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
       float ni_over_nt;
@@ -90,7 +91,7 @@ class dielectric : public material{
       else 
         reflect_prob = 1;
 
-      if (drand48() < reflect_prob)
+      if (random_float(s) < reflect_prob)
         scattered = ray(rec.p, reflected);
       else
         scattered = ray(rec.p, refracted);

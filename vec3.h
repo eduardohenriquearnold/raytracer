@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <cmath>
+#include <curand_kernel.h>
 
 using std::sqrt;
 
@@ -135,26 +136,23 @@ __host__ __device__ inline vec3 unit_vector(vec3 v){
   return v/v.length();
 }
 
-// __host__ __device__ inline float random_float(float min=0, float max=1){
-    // static std::uniform_real_distribution<float> distribution(min, max);
-    // static std::mt19937 generator;
-    // return distribution(generator);
-// }
-
 __host__ __device__ inline float clamp(float x, float min, float max){
   if (x<min) return min;
   if (x>max) return max;
   return x;
 }
 
-// __host__ __device__ inline vec3 random_vec3(float min=0, float max=1){
-    // return vec3(random_float(min,max),random_float(min,max),random_float(min,max));
-// }
+__device__ inline float random_float(curandState* s, float min=0, float max=1){
+  return min + (max-min)*curand_uniform(s);
+}
 
-// vec3 random_in_unit_sphere(){
-  // while(true){
-    // auto p = random_vec3(-1,1);
-    // if (p.squared_length() >= 1) continue;
-    // return p;
-  // }
-// }
+__device__ inline vec3 random_vec3(curandState* s, float min=0, float max=1){
+    return vec3(random_float(s,min,max),random_float(s,min,max),random_float(s,min,max));
+}
+
+__device__ vec3 random_in_unit_sphere(curandState* s){
+  auto a = random_float(s, 0, 2*M_PI);
+  auto z = random_float(s, -1,1);
+  auto r = sqrt(1-z*z);
+  return vec3(r*cos(a), r*sin(a), z);
+}

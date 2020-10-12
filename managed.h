@@ -1,5 +1,6 @@
 //create a managed class that will automatically allocate space in the unified memory, thus avoiding us having to deep copy anything from host -> device or using ugly double pointers to initialize everything within a kernel
 //Based on Mark Harris NVIDIA blog post about unified memory in CUDA 6 (November, 2013).
+#pragma once
 
 class Managed {
 public:

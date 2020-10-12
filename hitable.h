@@ -1,11 +1,6 @@
 #pragma once
-#include <vector>
-#include <memory>
-
 #include "ray.h"
-
-using std::shared_ptr;
-using std::make_shared;
+#include "managed.h"
 
 class material;
 
@@ -13,32 +8,32 @@ struct hit_record {
   float t;
   vec3 p;
   vec3 normal;
-  shared_ptr<material> mat_ptr;
+  material* mat_ptr;
 };
 
-class hitable{
+class hitable : public Managed{
   public:
-    virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const = 0;
+    __device__ virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const = 0;
 };
 
 class hitable_list : public hitable {
   public:
-    hitable_list() {}
-    hitable_list(shared_ptr<hitable> object){ add(object); }
+    hitable_list(int max) {cudaMallocManaged(&objects, sizeof(hitable*)*max); count=0; };
 
-    void add(shared_ptr<hitable> object) { objects.push_back(object); }
-    void clear() { objects.clear(); }
-    virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const;
+    __host__ __device__ void add(hitable *object) { objects[count++] = object; }
+    __device__ virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const;
 
-    std::vector<shared_ptr<hitable> > objects;
+    int count;
+    hitable** objects;
+
 };
 
-bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_record& rec) const{
+__device__ bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_record& rec) const{
   hit_record temp_rec;
   bool hit_anything = false;
   double closest_so_far = t_max;
-  for (const auto& object: objects)
-    if (object->hit(r, t_min, closest_so_far, temp_rec))
+  for (int i=0; i< count; i++)
+    if (objects[i]->hit(r, t_min, closest_so_far, temp_rec))
     {
       hit_anything = true;
       closest_so_far = temp_rec.t;
@@ -50,15 +45,15 @@ bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_record& rec) 
 class sphere: public hitable{
   public:
     sphere(){}
-    sphere(vec3 cen, float r, shared_ptr<material> mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
-    virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const override;
+    sphere(vec3 cen, float r, material* mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
+    __device__ virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const override;
 
     vec3 center;
     float radius;
-    shared_ptr<material> mat;
+    material* mat;
 };
 
-bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const {
+__device__ bool sphere::hit(const ray& r, float t_min, float t_max, hit_record& rec) const {
   vec3 oc = r.origin() - center;
   float a = dot(r.direction(), r.direction());
   float b = dot(oc, r.direction());
