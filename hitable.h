@@ -1,6 +1,5 @@
 #pragma once
 #include "ray.h"
-#include "managed.h"
 
 class material;
 
@@ -11,16 +10,16 @@ struct hit_record {
   material* mat_ptr;
 };
 
-class hitable : public Managed{
+class hitable {
   public:
     __device__ virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const = 0;
 };
 
 class hitable_list : public hitable {
   public:
-    hitable_list(int max) {cudaMallocManaged(&objects, sizeof(hitable*)*max); count=0; };
+    __device__ hitable_list(int max) {objects = new hitable*[max]; count=0; };
 
-    __host__ __device__ void add(hitable *object) { objects[count++] = object; }
+    __device__ void add(hitable *object) { objects[count++] = object; }
     __device__ virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const;
 
     int count;
@@ -45,8 +44,8 @@ __device__ bool hitable_list::hit(const ray& r, float t_min, float t_max, hit_re
 class sphere: public hitable{
   public:
     sphere(){}
-    sphere(vec3 cen, float r, material* mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
-    __device__ virtual bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const override;
+    __device__ sphere(vec3 cen, float r, material* mat_ptr) : center(cen), radius(r), mat(mat_ptr){};
+    __device__ bool hit(const ray& r, float tmin, float t_max, hit_record& rec) const override;
 
     vec3 center;
     float radius;

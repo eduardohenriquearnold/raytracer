@@ -2,16 +2,15 @@
 #include "vec3.h"
 #include "ray.h"
 #include "hitable.h"
-#include "managed.h"
 
-class material : public Managed {
+class material {
   public: 
     __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* s) const = 0;
 };
 
 class lambertian: public material{
   public:
-    __host__ __device__ lambertian(const vec3& a) : albedo(a) {}
+    __device__ lambertian(const vec3& a) : albedo(a) {}
     __device__ virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, curandState* s) const {      
       vec3 target = rec.p + rec.normal + random_in_unit_sphere(s);
       scattered = ray(rec.p, target-rec.p);
@@ -24,7 +23,7 @@ class lambertian: public material{
 
 class metal: public material{
   public:
-    __host__ __device__ metal(const vec3& a) : albedo(a) {}
+    __device__ metal(const vec3& a) : albedo(a) {}
 
     __device__ vec3 reflect(const vec3& v, const vec3& n) const {
       return v-2*dot(v,n)*n;
@@ -42,7 +41,7 @@ class metal: public material{
 
 class dielectric : public material{
   public:
-    __host__ __device__ dielectric(float ri) : ref_idx(ri){}
+    __device__ dielectric(float ri) : ref_idx(ri){}
 
     __device__ vec3 reflect(const vec3& v, const vec3& n) const {
       return v-2*dot(v,n)*n;

@@ -1,11 +1,10 @@
 #pragma once
 #include <math.h>
 #include "ray.h"
-#include "managed.h"
 
-class camera : public Managed{
+class camera{
   public:
-    __host__ __device__ camera(vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect){
+     __device__ camera(vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect){
       vec3 u,v,w;
       float theta = vfov*M_PI/180;
       float half_height = tan(theta/2);
@@ -21,7 +20,7 @@ class camera : public Managed{
       vertical = 2*half_height*v;
     }
 
-    __host__ __device__ camera(const camera &c){
+    __device__ camera(const camera &c){
       origin = c.origin;
       horizontal = c.horizontal;
       vertical = c.vertical;
