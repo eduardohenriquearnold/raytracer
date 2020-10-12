@@ -54,15 +54,15 @@ __global__ void render(vec3 *fb, const int nx, const int ny, const int ns, camer
   int pixelIdx = i + j*nx;
   if (i>=nx || j>=ny)
     return;
-  curandState ls = crs[pixelIdx];
+  curandState* ls = &crs[pixelIdx];
 
   vec3 col(0,0,0);
   for (int s=0; s<ns; s++)
   {
-    float u = (i +random_float(&ls))/ float(nx);
-    float v = (j +random_float(&ls)) / float(ny);
+    float u = (i +random_float(ls))/ float(nx);
+    float v = (j +random_float(ls)) / float(ny);
     ray r = (**cam).get_ray(u,v);
-    col += color(r, h, &ls);
+    col += color(r, h, ls);
   }
   col /= ns;
 
@@ -88,19 +88,53 @@ __global__ void init_cam(camera** c, int nx, int ny){
   if (!(threadIdx.x == 0 && blockIdx.x == 0))
     return;
 
-  // camera *cam = new camera(vec3(13,2,3), vec3(0,0,0), vec3(0,1,0), 20, float(nx)/float(ny));
-  *c = new camera(vec3(0,0,0), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/ny);
+  *c = new camera(vec3(13,2,3), vec3(0,0,0), vec3(0,1,0), 20, float(nx)/float(ny));
+  // *c = new camera(vec3(0,0,0), vec3(0,0,-1), vec3(0,1,0), 90, float(nx)/ny);
 }
 
-__global__ void init_world(hitable** w){
+__device__ void random_scene(hitable_list* world, curandState* rs) {
+
+  for (int a=-11; a<11; a++)
+    for (int b=-11; b<11; b++) {
+      float choose_mat = random_float(rs);
+      vec3 center(a+random_float(rs,0,0.9), 0.2, b+random_float(rs,0,0.9));
+
+      if ((center-vec3(4,0.2,0)).length() < 0.9)
+        continue;
+
+      material* mat;
+      if (choose_mat < 0.8)
+        mat = new lambertian(random_vec3(rs));
+      else if (choose_mat < 0.95)
+        mat = new metal(random_vec3(rs,0,0.5));
+      else
+        mat = new dielectric(1.5);
+
+      world->add(new sphere(center, 0.2, mat));
+    }
+
+	world->add(new sphere(vec3(0,-1000,0), 1000, new lambertian(vec3(0.5,0.5,0.5))));
+  world->add(new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5)));
+  world->add(new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1))));
+  world->add(new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5))));
+}
+
+__global__ void init_world(hitable** w, curandState* crs){
   if (!(threadIdx.x == 0 && blockIdx.x == 0))
     return;
 
-  *w = new hitable_list(10);
-
+  *w = new hitable_list(300);
   hitable_list* world = (hitable_list*) *w;
-  world->add(new sphere(vec3(0,-100.5,-1), 100.f, new lambertian(vec3(0.3,0.3,0.3))));
-  world->add(new sphere(vec3(0,0,-1), 0.5f, new lambertian(vec3(0.3,0.5,0.3)) ));
+
+  bool randomScenario = true;
+
+  if (randomScenario)
+    random_scene(world, &crs[0]);
+  else{
+    world->add(new sphere(vec3(0,0,-1), 0.5f, new lambertian(vec3(0.3,0.5,0.3))));
+    world->add(new sphere(vec3(0,-100.5,-1), 100.f, new lambertian(vec3(0.3,0.3,0.3))));
+  }
+
 }
 
 int main()
@@ -111,7 +145,7 @@ int main()
   //define rendering limits/properties
   const int nx = 600;
   const int ny = 400;
-  const int ns = 1000;
+  const int ns = 100;
 
   //define thread numbers and block dimensions
   const int tx = 8;
@@ -139,7 +173,7 @@ int main()
   //create world (objects and materials) in device
   hitable** world;
   cudaMalloc(&world, sizeof(hitable*));
-  init_world<<<1,1>>>(world);
+  init_world<<<1,1>>>(world, crs);
   cudaDeviceSynchronize();
 
   //render world

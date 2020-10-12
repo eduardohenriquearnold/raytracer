@@ -1,14 +1,14 @@
-CXX = g++
-CXX_FLAGS = -fopenmp
+CXX = nvcc 
+CXX_FLAGS = 
 
 main: 
-	$(CXX) main.cpp -o rt $(CXX_FLAGS)
+	$(CXX) main.cpp -o rtc $(CXX_FLAGS)
 
 render:
-	./rt
+	./rtc
 	convert output.ppm output.png
 
 clean: 
-	rm rt
+	rm rtc
 	rm output.ppm
 	rm output.png
